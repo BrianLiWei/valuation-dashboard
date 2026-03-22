@@ -1,0 +1,289 @@
+.app-container {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 24px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  color: #1f2937;
+}
+
+.header {
+  text-align: center;
+  margin-bottom: 32px;
+  padding-bottom: 20px;
+  border-bottom: 2px solid #e5e7eb;
+}
+
+.header h1 {
+  font-size: 28px;
+  font-weight: 700;
+  color: #111827;
+  margin: 0 0 8px;
+}
+
+.subtitle {
+  font-size: 14px;
+  color: #6b7280;
+  margin: 0;
+}
+
+.data-source {
+  font-size: 12px;
+  color: #9ca3af;
+  margin: 4px 0 0;
+}
+
+/* 数据来源信息 */
+.data-source-section {
+  margin-bottom: 20px;
+  padding: 12px 16px;
+  background: #f0f9ff;
+  border-radius: 8px;
+  border: 1px solid #bae6fd;
+}
+
+.data-source-section h4 {
+  font-size: 13px;
+  font-weight: 600;
+  color: #0369a1;
+  margin: 0 0 8px;
+}
+
+.index-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.index-tag {
+  font-size: 12px;
+  padding: 4px 10px;
+  background: white;
+  border: 1px solid #7dd3fc;
+  border-radius: 16px;
+  color: #0284c7;
+}
+
+/* 多指数图表 */
+.multi-index-chart {
+  padding: 16px;
+}
+
+.index-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 12px;
+}
+
+.index-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  background: #f9fafb;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+}
+
+.index-name {
+  font-weight: 600;
+  color: #111827;
+  flex: 1;
+}
+
+.index-code {
+  font-size: 12px;
+  color: #6b7280;
+  font-family: monospace;
+}
+
+.index-count {
+  font-size: 11px;
+  color: #9ca3af;
+}
+
+/* 最新估值卡片 */
+.latest-valuation {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+  margin-bottom: 24px;
+}
+
+.valuation-card {
+  background: white;
+  border-radius: 12px;
+  padding: 20px;
+  text-align: center;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e5e7eb;
+  transition: transform 0.2s, box-shadow 0.2s;
+  display: flex;
+  flex-direction: column;
+  min-height: 280px;
+}
+
+.valuation-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.valuation-card.main {
+  background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+  border-color: #bae6fd;
+}
+
+.valuation-card.defense {
+  background: linear-gradient(135deg, #f5f3ff 0%, #ede9fe 100%);
+  border-color: #ddd6fe;
+}
+
+.valuation-card.offense {
+  background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+  border-color: #fecaca;
+}
+
+.card-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: #6b7280;
+  margin-bottom: 8px;
+}
+
+.card-value {
+  font-size: 48px;
+  font-weight: 800;
+  line-height: 1;
+  margin-bottom: 12px;
+}
+
+.card-level {
+  display: inline-block;
+  padding: 4px 16px;
+  border-radius: 20px;
+  color: white;
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.card-date {
+  font-size: 12px;
+  color: #9ca3af;
+}
+
+.card-sublabel {
+  font-size: 13px;
+  color: #6b7280;
+}
+
+/* 卡片分项详情 */
+.card-details {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.detail-item {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  color: #6b7280;
+  margin-bottom: 4px;
+}
+
+.detail-item span:last-child {
+  font-weight: 600;
+  color: #374151;
+}
+
+.detail-source {
+  font-size: 10px;
+  color: #9ca3af;
+  font-style: italic;
+  margin-top: auto;
+}
+
+/* 图表区域 */
+.chart-section {
+  margin-bottom: 40px;
+  padding: 24px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e5e7eb;
+}
+
+.chart-section h2 {
+  font-size: 18px;
+  font-weight: 600;
+  color: #111827;
+  margin: 0 0 8px;
+}
+
+.chart-description {
+  font-size: 13px;
+  color: #6b7280;
+  margin: 0 0 20px;
+}
+
+/* 信息说明 */
+.info-section {
+  margin-bottom: 40px;
+  padding: 24px;
+  background: #f9fafb;
+  border-radius: 12px;
+}
+
+.info-section h3 {
+  font-size: 16px;
+  font-weight: 600;
+  color: #111827;
+  margin: 0 0 16px;
+}
+
+.info-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+.info-item {
+  font-size: 13px;
+  color: #4b5563;
+  padding: 12px;
+  background: white;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+}
+
+.info-item strong {
+  color: #111827;
+}
+
+/* 页脚 */
+.footer {
+  text-align: center;
+  padding: 20px;
+  color: #9ca3af;
+  font-size: 12px;
+  border-top: 1px solid #e5e7eb;
+}
+
+/* 响应式 */
+@media (max-width: 768px) {
+  .latest-valuation {
+    grid-template-columns: 1fr;
+  }
+
+  .info-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .app-container {
+    padding: 16px;
+  }
+
+  .chart-section {
+    padding: 16px;
+  }
+}

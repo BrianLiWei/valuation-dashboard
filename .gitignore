@@ -1,0 +1,34 @@
+# Logs
+logs
+*.log
+
+# Python
+venv/
+*.pyc
+__pycache__/
+.last_sent_saturday
+
+# Config (contains sensitive tokens)
+token.cfg
+weekly_report*.json
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+node_modules
+dist
+dist-ssr
+*.local
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
