@@ -49,8 +49,8 @@ export function processLixingerData(rawData) {
     indexDataMap[code] = {};
     for (const item of info.data || []) {
       indexDataMap[code][item.date] = {
-        pe_ttm: item.pe_ttm,
-        pb: item.pb,
+        pe_ttm: item['pe_ttm.mcw'],
+        pb: item['pb.mcw'],
       };
     }
   }
@@ -224,8 +224,8 @@ export function getAllIndexData(rawData) {
     for (const item of info.data || []) {
       dataList.push({
         date: item.date,
-        pe_ttm: item.pe_ttm,
-        pb: item.pb,
+        pe_ttm: item['pe_ttm.mcw'],
+        pb: item['pb.mcw'],
       });
     }
 
@@ -255,7 +255,8 @@ export function getIndexPEPercentile(rawData, indexCode) {
     const date = sortedDates[i];
     const currentData = indexData.data.find(d => d.date === date);
 
-    if (!currentData?.pe_ttm || currentData.pe_ttm <= 0) continue;
+    const pe_ttm = currentData?.['pe_ttm.mcw'];
+    if (!pe_ttm || pe_ttm <= 0) continue;
 
     const startIdx = Math.max(0, i - fiveYearDays);
     const peVals = [];
@@ -263,19 +264,20 @@ export function getIndexPEPercentile(rawData, indexCode) {
     for (let j = startIdx; j < i; j++) {
       const histDate = sortedDates[j];
       const histData = indexData.data.find(d => d.date === histDate);
-      if (histData?.pe_ttm && histData.pe_ttm > 0) {
-        peVals.push(histData.pe_ttm);
+      const histPe = histData?.['pe_ttm.mcw'];
+      if (histPe && histPe > 0) {
+        peVals.push(histPe);
       }
     }
 
     if (peVals.length < 250) continue;
 
     const sortedPE = [...peVals].sort((a, b) => a - b);
-    const pePercentile = calculatePercentile(currentData.pe_ttm, sortedPE);
+    const pePercentile = calculatePercentile(pe_ttm, sortedPE);
 
     result.push({
       date,
-      pe: currentData.pe_ttm,
+      pe: pe_ttm,
       pe_percentile: pePercentile !== null ? Math.round(pePercentile * 10) / 10 : null,
     });
   }
