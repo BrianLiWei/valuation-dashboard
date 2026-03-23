@@ -9,6 +9,7 @@ import './App.css';
 function App() {
   const [rawData, setRawData] = useState(null);
   const [dataLoading, setDataLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
 
   // 动态加载数据（每次刷新页面时获取最新数据）
   useEffect(() => {
@@ -22,29 +23,14 @@ function App() {
       })
       .catch(err => {
         console.error('Failed to load data:', err);
+        setLoadError(true);
         setDataLoading(false);
       });
   }, []);
 
-  // 数据加载中显示 loading
-  if (dataLoading) {
-    return (
-      <div className="app-container" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
-        <p>加载数据中...</p>
-      </div>
-    );
-  }
-
-  if (!rawData) {
-    return (
-      <div className="app-container" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
-        <p>数据加载失败，请刷新页面</p>
-      </div>
-    );
-  }
-
-  // 处理理杏仁数据
+  // 处理理杏仁数据 - 所有hook必须在前面
   const processedData = useMemo(() => {
+    if (!rawData) return [];
     console.log('Processing data...');
     const result = processLixingerData(rawData);
     console.log('Processed result:', result?.length, 'items');
@@ -57,18 +43,21 @@ function App() {
 
   // 中证红利PE分位历史
   const hongliPEData = useMemo(() => {
+    if (!rawData) return [];
     const data = getIndexPEPercentile(rawData, '000922');
     return data.filter(d => d.date >= '2015-01-01');
   }, [rawData]);
 
   // 创业板指PE分位历史
   const cybPEData = useMemo(() => {
+    if (!rawData) return [];
     const data = getIndexPEPercentile(rawData, '399006');
     return data.filter(d => d.date >= '2015-01-01');
   }, [rawData]);
 
   // 中证1000 PE分位历史
   const zg1000PEData = useMemo(() => {
+    if (!rawData) return [];
     const data = getIndexPEPercentile(rawData, '000852');
     return data.filter(d => d.date >= '2015-01-01');
   }, [rawData]);
@@ -87,6 +76,23 @@ function App() {
   const latestLevel = getValuationLevel(latestData?.compositeScore || 50);
   const defenseLevel = getValuationLevel(latestData?.defenseScore || 50);
   const offenseLevel = getValuationLevel(latestData?.offenseScore || 50);
+
+  // 数据加载中或加载失败
+  if (dataLoading) {
+    return (
+      <div className="app-container" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+        <p>加载数据中...</p>
+      </div>
+    );
+  }
+
+  if (loadError || !rawData) {
+    return (
+      <div className="app-container" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+        <p>数据加载失败，请刷新页面</p>
+      </div>
+    );
+  }
 
   return (
     <div className="app-container">
