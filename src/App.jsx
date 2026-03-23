@@ -1,15 +1,47 @@
-import { useMemo } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import ValuationChart from './components/ValuationChart';
 import MetricsChart from './components/MetricsChart';
 import ValuationLegend from './components/ValuationLegend';
-import { getValuationLevel, processLixingerData, getAllIndexData, getIndexPEPercentile } from './utils/valuation';
+import { getValuationLevel, processLixingerData, getIndexPEPercentile } from './utils/valuation';
 import SingleIndexChart from './components/SingleIndexChart';
-import rawData from './data/lixinger_indices.json';
 import './App.css';
 
 function App() {
-  console.log('Raw data keys:', Object.keys(rawData));
-  console.log('Raw data sample:', rawData['000985']?.data?.slice(0, 2));
+  const [rawData, setRawData] = useState(null);
+  const [dataLoading, setDataLoading] = useState(true);
+
+  // 动态加载数据（每次刷新页面时获取最新数据）
+  useEffect(() => {
+    fetch('./data/lixinger_indices.json')
+      .then(res => res.json())
+      .then(data => {
+        console.log('Raw data keys:', Object.keys(data));
+        console.log('Raw data sample:', data['000985']?.data?.slice(0, 2));
+        setRawData(data);
+        setDataLoading(false);
+      })
+      .catch(err => {
+        console.error('Failed to load data:', err);
+        setDataLoading(false);
+      });
+  }, []);
+
+  // 数据加载中显示 loading
+  if (dataLoading) {
+    return (
+      <div className="app-container" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+        <p>加载数据中...</p>
+      </div>
+    );
+  }
+
+  if (!rawData) {
+    return (
+      <div className="app-container" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+        <p>数据加载失败，请刷新页面</p>
+      </div>
+    );
+  }
 
   // 处理理杏仁数据
   const processedData = useMemo(() => {
@@ -21,27 +53,25 @@ function App() {
       console.log('Last item:', result[result.length - 1]);
     }
     return result;
-  }, []);
-
-  const allIndexData = useMemo(() => getAllIndexData(rawData), []);
+  }, [rawData]);
 
   // 中证红利PE分位历史
   const hongliPEData = useMemo(() => {
     const data = getIndexPEPercentile(rawData, '000922');
     return data.filter(d => d.date >= '2015-01-01');
-  }, []);
+  }, [rawData]);
 
   // 创业板指PE分位历史
   const cybPEData = useMemo(() => {
     const data = getIndexPEPercentile(rawData, '399006');
     return data.filter(d => d.date >= '2015-01-01');
-  }, []);
+  }, [rawData]);
 
   // 中证1000 PE分位历史
   const zg1000PEData = useMemo(() => {
     const data = getIndexPEPercentile(rawData, '000852');
     return data.filter(d => d.date >= '2015-01-01');
-  }, []);
+  }, [rawData]);
 
   // 过滤2015年及之后的数据
   const filteredData = useMemo(() => {
@@ -58,16 +88,6 @@ function App() {
   const defenseLevel = getValuationLevel(latestData?.defenseScore || 50);
   const offenseLevel = getValuationLevel(latestData?.offenseScore || 50);
 
-  // 数据来源信息
-  const dataSourceInfo = useMemo(() => {
-    const codes = Object.keys(allIndexData);
-    return codes.map(code => ({
-      code,
-      name: allIndexData[code].name,
-      count: allIndexData[code].data.length,
-    }));
-  }, [allIndexData]);
-
   return (
     <div className="app-container">
       <header className="header">
@@ -75,18 +95,6 @@ function App() {
         <p className="subtitle">基于全局估值体系的交易信号监控系统</p>
         <p className="data-source">数据来源: 理杏仁 | 计算: 五年滚动分位点</p>
       </header>
-
-      {/* 数据来源信息 */}
-      <section className="data-source-section">
-        <h4>可用指数数据</h4>
-        <div className="index-tags">
-          {dataSourceInfo.map(item => (
-            <span key={item.code} className="index-tag">
-              {item.name} ({item.count}条)
-            </span>
-          ))}
-        </div>
-      </section>
 
       {/* 最新估值卡片 */}
       <section className="latest-valuation">
