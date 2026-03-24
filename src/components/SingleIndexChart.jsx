@@ -51,14 +51,14 @@ export default function SingleIndexChart({ data, title, dataKey = 'pe_percentile
 
   if (validData.length === 0) {
     return (
-      <div style={{ width: '100%', height: 350, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <div style={{ width: '100%', height: 500, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         <p>暂无数据</p>
       </div>
     );
   }
 
   return (
-    <div style={{ width: '100%', height: 350 }}>
+    <div style={{ width: '100%', height: 500 }}>
       <ResponsiveContainer>
         <ComposedChart data={validData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />

@@ -23,32 +23,52 @@ def normalize_date(date_str):
         return date_str.split("T")[0]
     return date_str
 
-# 获取指数数据
+# 获取指数数据（处理API的10年限制）
 def get_index_data(stock_code, start_date, end_date):
-    """获取指数数据"""
+    """获取指数数据，自动处理10年限制"""
     url = "https://open.lixinger.com/api/a/index/fundamental"
-    params = {
-        "stockCodes": [stock_code],
-        "metricsList": ["pe_ttm.mcw", "pb.mcw"],
-        "startDate": start_date,
-        "endDate": end_date,
-        "token": LIXINGER_TOKEN
-    }
+    all_data = []
 
-    try:
-        resp = requests.post(url, json=params, timeout=30)
-        if resp.status_code == 200:
-            data = resp.json()
-            raw_data = data.get("data", [])
-            # 规范化日期格式
-            for item in raw_data:
-                if item.get("date") and "T" in item["date"]:
-                    item["date"] = normalize_date(item["date"])
-            return raw_data
-        return []
-    except Exception as e:
-        print(f"获取 {stock_code} 数据失败: {e}")
-        return []
+    # 将日期范围分段，每段不超过10年
+    current_start = datetime.strptime(start_date, "%Y-%m-%d")
+    end = datetime.strptime(end_date, "%Y-%m-%d")
+
+    while current_start < end:
+        # 计算每段结束日期（最多10年）
+        segment_end = current_start + timedelta(days=3650)
+        if segment_end > end:
+            segment_end = end
+
+        segment_start_str = current_start.strftime("%Y-%m-%d")
+        segment_end_str = segment_end.strftime("%Y-%m-%d")
+
+        params = {
+            "stockCodes": [stock_code],
+            "metricsList": ["pe_ttm.mcw", "pb.mcw"],
+            "startDate": segment_start_str,
+            "endDate": segment_end_str,
+            "token": LIXINGER_TOKEN
+        }
+
+        try:
+            resp = requests.post(url, json=params, timeout=30)
+            if resp.status_code == 200:
+                data = resp.json()
+                raw_data = data.get("data", [])
+                # 规范化日期格式
+                for item in raw_data:
+                    if item.get("date") and "T" in item["date"]:
+                        item["date"] = normalize_date(item["date"])
+                all_data.extend(raw_data)
+        except Exception as e:
+            print(f"获取 {stock_code} 数据失败 ({segment_start_str}~{segment_end_str}): {e}")
+
+        # 移动到下一段
+        current_start = segment_end + timedelta(days=1)
+
+    # 按日期排序
+    all_data.sort(key=lambda x: x.get("date", ""), reverse=True)
+    return all_data
 
 def load_existing_data():
     """加载现有数据"""
@@ -69,9 +89,10 @@ def fetch_and_update_data():
     print("开始获取最新数据...")
     print("=" * 50)
 
-    # 计算日期范围：获取过去6年的数据（确保有足够历史计算5年分位）
+    # 计算日期范围：获取2010年至今的数据（分段请求，API每段限制10年）
+    # 这样可以从2015年起计算5年滚动百分位
     end_date = (datetime.now() + timedelta(days=1)).strftime("%Y-%m-%d")
-    start_date = (datetime.now() - timedelta(days=2200)).strftime("%Y-%m-%d")
+    start_date = "2010-01-01"
 
     print(f"日期范围: {start_date} ~ {end_date}")
 
