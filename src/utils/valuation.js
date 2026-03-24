@@ -22,12 +22,9 @@ export function getValuationLevel(score) {
 export const INDEX_INFO = {
   "000985": { name: "中证全指", description: "全部A股" },
   "000852": { name: "中证1000", description: "小盘股" },
-  "000016": { name: "上证50", description: "大盘蓝筹" },
-  "000905": { name: "中证500", description: "中盘股" },
-  "000906": { name: "中证800", description: "大中盘" },
-  "399006": { name: "创业板指", description: "创业板" },
   "000922": { name: "中证红利", description: "中证红利" },
-  "399673": { name: "创业板50", description: "创业板50" },
+  "399006": { name: "创业板指", description: "创业板" },
+  "000905": { name: "中证500", description: "中证500（备选）" },
 };
 
 // 计算百分位数
@@ -121,14 +118,16 @@ export function processLixingerData(rawData) {
     // 获取进攻端指标 - 创业板指+中证1000 PE分位均值
     let offenseScore = null;
     const cybData = indexDataMap["399006"]?.[date];
-    const zg1000Data = indexDataMap["000852"]?.[date];
+    // 中证1000优先，若无数据则使用中证500作为备选
+    const zg1000Data = indexDataMap["000852"]?.[date] || indexDataMap["000905"]?.[date];
 
     if (cybData?.pe_ttm && cybData.pe_ttm > 0 && zg1000Data?.pe_ttm && zg1000Data.pe_ttm > 0) {
       const cybVals = [], zg1000Vals = [];
       for (let j = startIdx; j < i; j++) {
         const histDate = sortedDates[j];
         const cybHist = indexDataMap["399006"]?.[histDate];
-        const zg1000Hist = indexDataMap["000852"]?.[histDate];
+        // 备选：中证1000优先，中证500次之
+        const zg1000Hist = indexDataMap["000852"]?.[histDate] || indexDataMap["000905"]?.[histDate];
         if (cybHist?.pe_ttm && cybHist.pe_ttm > 0) cybVals.push(cybHist.pe_ttm);
         if (zg1000Hist?.pe_ttm && zg1000Hist.pe_ttm > 0) zg1000Vals.push(zg1000Hist.pe_ttm);
       }

@@ -55,11 +55,21 @@ function App() {
     return data.filter(d => d.date >= '2015-01-01');
   }, [rawData]);
 
-  // 中证1000 PE分位历史
+  // 中证1000 PE分位历史（优先使用中证1000，无数据时用中证500替代）
   const zg1000PEData = useMemo(() => {
     if (!rawData) return [];
-    const data = getIndexPEPercentile(rawData, '000852');
-    return data.filter(d => d.date >= '2015-01-01');
+    const data852 = getIndexPEPercentile(rawData, '000852');
+    const data905 = getIndexPEPercentile(rawData, '000905');
+    // 合并数据，000852优先，000905作为补充
+    const merged = [...data852];
+    const dateSet = new Set(data852.map(d => d.date));
+    for (const item of data905) {
+      if (!dateSet.has(item.date)) {
+        merged.push(item);
+      }
+    }
+    merged.sort((a, b) => a.date.localeCompare(b.date));
+    return merged.filter(d => d.date >= '2015-01-01');
   }, [rawData]);
 
   // 过滤2015年及之后的数据
