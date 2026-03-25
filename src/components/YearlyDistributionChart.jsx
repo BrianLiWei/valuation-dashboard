@@ -21,7 +21,8 @@ const ZONE_COLORS = {
 
 const CustomTooltip = ({ active, payload, label }) => {
   if (active && payload && payload.length) {
-    const total = payload.reduce((sum, p) => sum + (p.value || 0), 0);
+    // 使用原始数据中的 total 字段（实际交易日数量），而不是百分比之和
+    const total = payload[0]?.payload?.total || 0;
     return (
       <div style={{
         backgroundColor: 'rgba(255, 255, 255, 0.95)',
@@ -38,7 +39,7 @@ const CustomTooltip = ({ active, payload, label }) => {
           </p>
         ))}
         <p style={{ marginTop: '8px', borderTop: '1px solid #eee', paddingTop: '8px' }}>
-          共 {total.toFixed(0)} 个交易日
+          共 {total} 个交易日
         </p>
       </div>
     );
