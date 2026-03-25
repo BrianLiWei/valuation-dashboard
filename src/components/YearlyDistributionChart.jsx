@@ -15,7 +15,7 @@ const ZONE_COLORS = {
   '低估': '#4ade80',
   '合理': '#facc15',
   '高估': '#fb923c',
-  '极度低估': '#ef4444',
+  '极度高估': '#ef4444',
 };
 
 const CustomTooltip = ({ active, payload, label }) => {
