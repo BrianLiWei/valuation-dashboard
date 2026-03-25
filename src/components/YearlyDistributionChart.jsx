@@ -6,6 +6,7 @@ import {
   YAxis,
   CartesianGrid,
   Tooltip,
+  Legend,
   ResponsiveContainer,
 } from 'recharts';
 
@@ -44,16 +45,15 @@ const CustomTooltip = ({ active, payload, label }) => {
   return null;
 };
 
-// 自定义图例 - 确保顺序正确
-function CustomLegend() {
+// 自定义图例内容 - 放在图表margin区域内
+const renderLegend = () => {
   const zones = ['极度低估', '低估', '合理', '高估', '极度高估'];
   return (
     <div style={{
       display: 'flex',
       justifyContent: 'center',
       gap: '20px',
-      paddingTop: '16px',
-      paddingBottom: '8px',
+      paddingTop: '10px',
       flexWrap: 'wrap',
     }}>
       {zones.map(zone => (
@@ -69,7 +69,7 @@ function CustomLegend() {
       ))}
     </div>
   );
-}
+};
 
 export default function YearlyDistributionChart({ data }) {
   const chartData = useMemo(() => {
@@ -88,11 +88,11 @@ export default function YearlyDistributionChart({ data }) {
   const zones = ['极度低估', '低估', '合理', '高估', '极度高估'];
 
   return (
-    <div style={{ width: '100%', height: 500 }}>
+    <div style={{ width: '100%', height: 520 }}>
       <ResponsiveContainer>
         <BarChart
           data={chartData}
-          margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+          margin={{ top: 20, right: 30, left: 20, bottom: 50 }}
         >
           <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
           <XAxis
@@ -107,6 +107,10 @@ export default function YearlyDistributionChart({ data }) {
             label={{ value: '占比 (%)', angle: -90, position: 'insideLeft', style: { textAnchor: 'middle', fontSize: 12 } }}
           />
           <Tooltip content={<CustomTooltip />} />
+          <Legend
+            content={renderLegend}
+            wrapperStyle={{ paddingTop: '0px' }}
+          />
           {zones.map(zone => (
             <Bar
               key={zone}
@@ -114,12 +118,10 @@ export default function YearlyDistributionChart({ data }) {
               stackId="a"
               fill={ZONE_COLORS[zone]}
               name={zone}
-              legendType="plainline"
             />
           ))}
         </BarChart>
       </ResponsiveContainer>
-      <CustomLegend />
     </div>
   );
 }
