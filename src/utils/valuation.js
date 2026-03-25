@@ -161,46 +161,25 @@ export function getAllIndexData(rawData) {
   return result;
 }
 
-// 计算单个指数的PE分位历史
+// 获取单个指数的PE分位历史（使用Python预计算值）
 export function getIndexPEPercentile(rawData, indexCode) {
   const indexData = rawData[indexCode];
   if (!indexData || !indexData.data) return [];
 
-  // 获取所有日期
-  const sortedDates = indexData.data.map(d => d.date).sort();
-
-  const fiveYearDays = 1250;
   const result = [];
 
-  for (let i = 0; i < sortedDates.length; i++) {
-    const date = sortedDates[i];
-    const currentData = indexData.data.find(d => d.date === date);
+  for (const item of indexData.data) {
+    const pe_ttm = item['pe_ttm.mcw'];
+    const pe_percentile = item['pe_percentile_5y'];
 
-    const pe_ttm = currentData?.['pe_ttm.mcw'];
-    if (!pe_ttm || pe_ttm <= 0) continue;
-
-    const startIdx = Math.max(0, i - fiveYearDays);
-    const peVals = [];
-
-    for (let j = startIdx; j < i; j++) {
-      const histDate = sortedDates[j];
-      const histData = indexData.data.find(d => d.date === histDate);
-      const histPe = histData?.['pe_ttm.mcw'];
-      if (histPe && histPe > 0) {
-        peVals.push(histPe);
-      }
+    // 只返回有有效PE分位的数据
+    if (pe_ttm && pe_ttm > 0 && pe_percentile !== null && pe_percentile !== undefined) {
+      result.push({
+        date: item.date,
+        pe: pe_ttm,
+        pe_percentile: pe_percentile,
+      });
     }
-
-    if (peVals.length < 250) continue;
-
-    const sortedPE = [...peVals].sort((a, b) => a - b);
-    const pePercentile = calculatePercentile(pe_ttm, sortedPE);
-
-    result.push({
-      date,
-      pe: pe_ttm,
-      pe_percentile: pePercentile !== null ? Math.round(pePercentile * 10) / 10 : null,
-    });
   }
 
   return result;
