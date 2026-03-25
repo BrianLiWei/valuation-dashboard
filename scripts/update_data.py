@@ -11,7 +11,7 @@ from datetime import datetime, timedelta
 
 # 配置
 LIXINGER_TOKEN = "87ed8c88-cda6-4000-939c-ac87d6da83b7"
-INDEX_CODES = ["000985", "000922", "399006", "000852", "000905"]  # 000905(中证500)作为000852(中证1000)的备选
+INDEX_CODES = ["000985", "000922", "399006", "000852", "000016", "000905", "000906", "399673", "399702"]
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 PROJECT_DIR = os.path.dirname(SCRIPT_DIR)
 JSON_FILE = os.path.join(PROJECT_DIR, "src/data/lixinger_indices.json")
