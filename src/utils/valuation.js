@@ -22,12 +22,9 @@ export function getValuationLevel(score) {
 export const INDEX_INFO = {
   "000985": { name: "中证全指", description: "全部A股" },
   "000852": { name: "中证1000", description: "小盘股" },
-  "000016": { name: "上证50", description: "大盘蓝筹" },
-  "000905": { name: "中证500", description: "中盘股" },
-  "000906": { name: "中证800", description: "大中盘" },
-  "399006": { name: "创业板指", description: "创业板" },
   "000922": { name: "中证红利", description: "中证红利" },
-  "399673": { name: "创业板50", description: "创业板50" },
+  "399006": { name: "创业板指", description: "创业板" },
+  "000905": { name: "中证500", description: "中证500（备选）" },
 };
 
 // 计算百分位数
@@ -39,11 +36,11 @@ function calculatePercentile(value, sortedHistory) {
   return (countBelow / validHistory.length) * 100;
 }
 
-// 处理原始数据，计算五年滚动分位点
+// 处理原始数据，使用预计算的百分位
 export function processLixingerData(rawData) {
   console.time('processLixingerData');
 
-  // 预处理数据
+  // 预处理数据 - 使用预计算的百分位
   const indexDataMap = {};
   for (const [code, info] of Object.entries(rawData)) {
     indexDataMap[code] = {};
@@ -51,6 +48,10 @@ export function processLixingerData(rawData) {
       indexDataMap[code][item.date] = {
         pe_ttm: item['pe_ttm.mcw'],
         pb: item['pb.mcw'],
+        pe_percentile: item['pe_percentile_5y'] || null,
+        pb_percentile: item['pb_percentile_5y'] || null,
+        erp: item['erp'] || null,
+        erp_reverse_percentile: item['erp_reverse_percentile_5y'] || null,
       };
     }
   }
@@ -65,12 +66,9 @@ export function processLixingerData(rawData) {
   const sortedDates = Array.from(allDates).sort();
   console.log('Total dates:', sortedDates.length);
 
-  // 五年约1250个交易日
-  const fiveYearDays = 1250;
-
   const result = [];
 
-  // 对每个日期计算分位点
+  // 对每个日期组合数据（使用预计算值）
   for (let i = 0; i < sortedDates.length; i++) {
     const date = sortedDates[i];
 
@@ -78,92 +76,32 @@ export function processLixingerData(rawData) {
     const zzqzData = indexDataMap["000985"]?.[date];
     if (!zzqzData || !zzqzData.pe_ttm || zzqzData.pe_ttm <= 0) continue;
 
-    // 获取过去五年的PE/PB历史数据
-    const startIdx = Math.max(0, i - fiveYearDays);
-    const peVals = [];
-    const pbVals = [];
-
-    for (let j = startIdx; j < i; j++) {
-      const histDate = sortedDates[j];
-      const histData = indexDataMap["000985"]?.[histDate];
-      if (histData?.pe_ttm && histData.pe_ttm > 0) peVals.push(histData.pe_ttm);
-      if (histData?.pb && histData.pb > 0) pbVals.push(histData.pb);
-    }
-
-    if (peVals.length < 250) continue;
-
-    // 排序用于分位点计算
-    const sortedPE = [...peVals].sort((a, b) => a - b);
-    const sortedPB = pbVals.length >= 250 ? [...pbVals].sort((a, b) => a - b) : null;
-
     const pe_ttm = zzqzData.pe_ttm;
     const pb = zzqzData.pb;
+    const pePercentile = zzqzData.pe_percentile;
+    const pbPercentile = zzqzData.pb_percentile;
+    const erp = zzqzData.erp;
+    const erpReversePercentile = zzqzData.erp_reverse_percentile;
 
-    // 计算PE/PB分位点
-    const pePercentile = calculatePercentile(pe_ttm, sortedPE);
-    const pbPercentile = sortedPB ? calculatePercentile(pb, sortedPB) : null;
+    // 跳过没有预计算分位的数据
+    if (pePercentile === null) continue;
 
-    // 获取防守端指标 - 中证红利PE分位
-    let defenseScore = null;
+    // 防守端指标 - 中证红利PE分位
     const hbData = indexDataMap["000922"]?.[date];
-    if (hbData?.pe_ttm && hbData.pe_ttm > 0) {
-      const hbVals = [];
-      for (let j = startIdx; j < i; j++) {
-        const histDate = sortedDates[j];
-        const histData = indexDataMap["000922"]?.[histDate];
-        if (histData?.pe_ttm && histData.pe_ttm > 0) hbVals.push(histData.pe_ttm);
-      }
-      if (hbVals.length >= 250) {
-        defenseScore = calculatePercentile(hbData.pe_ttm, [...hbVals].sort((a, b) => a - b));
-      }
-    }
+    const defenseScore = hbData?.pe_percentile || null;
 
-    // 获取进攻端指标 - 创业板指+中证1000 PE分位均值
-    let offenseScore = null;
+    // 进攻端指标 - 创业板指+中证1000/中证500 PE分位均值
     const cybData = indexDataMap["399006"]?.[date];
-    const zg1000Data = indexDataMap["000852"]?.[date];
+    const zg1000Data = indexDataMap["000852"]?.[date] || indexDataMap["000905"]?.[date];
 
-    if (cybData?.pe_ttm && cybData.pe_ttm > 0 && zg1000Data?.pe_ttm && zg1000Data.pe_ttm > 0) {
-      const cybVals = [], zg1000Vals = [];
-      for (let j = startIdx; j < i; j++) {
-        const histDate = sortedDates[j];
-        const cybHist = indexDataMap["399006"]?.[histDate];
-        const zg1000Hist = indexDataMap["000852"]?.[histDate];
-        if (cybHist?.pe_ttm && cybHist.pe_ttm > 0) cybVals.push(cybHist.pe_ttm);
-        if (zg1000Hist?.pe_ttm && zg1000Hist.pe_ttm > 0) zg1000Vals.push(zg1000Hist.pe_ttm);
-      }
-      if (cybVals.length >= 250 && zg1000Vals.length >= 250) {
-        const cybPct = calculatePercentile(cybData.pe_ttm, [...cybVals].sort((a, b) => a - b));
-        const zg1000Pct = calculatePercentile(zg1000Data.pe_ttm, [...zg1000Vals].sort((a, b) => a - b));
-        if (cybPct !== null && zg1000Pct !== null) {
-          offenseScore = (cybPct + zg1000Pct) / 2;
-        }
-      }
-    }
+    let offenseScore = null;
+    let cybPctVal = null;
+    let zg1000PctVal = null;
 
-    // 计算ERP
-    let erp = null;
-    if (pe_ttm && pe_ttm > 0) {
-      erp = (1 / pe_ttm * 100 - 2.5);
-    }
-
-    // ERP反向分位
-    let erpReversePercentile = null;
-    if (erp !== null) {
-      const erpVals = [];
-      for (let j = startIdx; j < i; j++) {
-        const histDate = sortedDates[j];
-        const histData = indexDataMap["000985"]?.[histDate];
-        if (histData?.pe_ttm && histData.pe_ttm > 0) {
-          erpVals.push(1 / histData.pe_ttm * 100 - 2.5);
-        }
-      }
-      if (erpVals.length >= 250) {
-        const erpPct = calculatePercentile(erp, [...erpVals].sort((a, b) => a - b));
-        if (erpPct !== null) {
-          erpReversePercentile = 100 - erpPct;
-        }
-      }
+    if (cybData?.pe_percentile && zg1000Data?.pe_percentile) {
+      cybPctVal = cybData.pe_percentile;
+      zg1000PctVal = zg1000Data.pe_percentile;
+      offenseScore = (cybPctVal + zg1000PctVal) / 2;
     }
 
     // 复合全局估值分数
@@ -172,39 +110,22 @@ export function processLixingerData(rawData) {
       compositeScore = pePercentile * 0.35 + pbPercentile * 0.25 + erpReversePercentile * 0.40;
     }
 
-    // 进攻端分项
-    let cybPctVal = null, zg1000PctVal = null;
-    const cybD = indexDataMap["399006"]?.[date];
-    const zg1000D = indexDataMap["000852"]?.[date];
-    if (cybD?.pe_ttm && zg1000D?.pe_ttm) {
-      const cybVals2 = [], zg1000Vals2 = [];
-      for (let j = startIdx; j < i; j++) {
-        const histDate = sortedDates[j];
-        const cybH = indexDataMap["399006"]?.[histDate];
-        const zg1000H = indexDataMap["000852"]?.[histDate];
-        if (cybH?.pe_ttm && cybH.pe_ttm > 0) cybVals2.push(cybH.pe_ttm);
-        if (zg1000H?.pe_ttm && zg1000H.pe_ttm > 0) zg1000Vals2.push(zg1000H.pe_ttm);
-      }
-      if (cybVals2.length >= 250) cybPctVal = calculatePercentile(cybD.pe_ttm, [...cybVals2].sort((a, b) => a - b));
-      if (zg1000Vals2.length >= 250) zg1000PctVal = calculatePercentile(zg1000D.pe_ttm, [...zg1000Vals2].sort((a, b) => a - b));
-    }
-
     result.push({
       date,
       pe_ttm,
       pb,
-      pe_percentile: pePercentile !== null ? Math.round(pePercentile * 10) / 10 : null,
-      pb_percentile: pbPercentile !== null ? Math.round(pbPercentile * 10) / 10 : null,
-      erp: erp !== null ? Math.round(erp * 100) / 100 : null,
-      erp_reverse_percentile: erpReversePercentile !== null ? Math.round(erpReversePercentile * 10) / 10 : null,
+      pe_percentile: pePercentile,
+      pb_percentile: pbPercentile,
+      erp: erp,
+      erp_reverse_percentile: erpReversePercentile,
       compositeScore: compositeScore !== null ? Math.round(compositeScore * 10) / 10 : null,
       defenseScore: defenseScore !== null ? Math.round(defenseScore * 10) / 10 : null,
       defense_pe: hbData?.pe_ttm || null,
       offenseScore: offenseScore !== null ? Math.round(offenseScore * 10) / 10 : null,
-      cyb_pe: cybD?.pe_ttm || null,
-      cyb_pe_percentile: cybPctVal !== null ? Math.round(cybPctVal * 10) / 10 : null,
-      zg1000_pe: zg1000D?.pe_ttm || null,
-      zg1000_pe_percentile: zg1000PctVal !== null ? Math.round(zg1000PctVal * 10) / 10 : null,
+      cyb_pe: cybData?.pe_ttm || null,
+      cyb_pe_percentile: cybPctVal,
+      zg1000_pe: zg1000Data?.pe_ttm || null,
+      zg1000_pe_percentile: zg1000PctVal,
     });
   }
 
