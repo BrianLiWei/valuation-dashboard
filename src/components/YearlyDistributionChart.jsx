@@ -6,7 +6,6 @@ import {
   YAxis,
   CartesianGrid,
   Tooltip,
-  Legend,
   ResponsiveContainer,
 } from 'recharts';
 
@@ -20,7 +19,6 @@ const ZONE_COLORS = {
 
 const CustomTooltip = ({ active, payload, label }) => {
   if (active && payload && payload.length) {
-    // 使用原始数据中的 total 字段（实际交易日数量），而不是百分比之和
     const total = payload[0]?.payload?.total || 0;
     return (
       <div style={{
@@ -46,6 +44,33 @@ const CustomTooltip = ({ active, payload, label }) => {
   return null;
 };
 
+// 自定义图例 - 确保顺序正确
+function CustomLegend() {
+  const zones = ['极度低估', '低估', '合理', '高估', '极度高估'];
+  return (
+    <div style={{
+      display: 'flex',
+      justifyContent: 'center',
+      gap: '20px',
+      paddingTop: '16px',
+      paddingBottom: '8px',
+      flexWrap: 'wrap',
+    }}>
+      {zones.map(zone => (
+        <div key={zone} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+          <div style={{
+            width: '14px',
+            height: '14px',
+            backgroundColor: ZONE_COLORS[zone],
+            borderRadius: '3px',
+          }} />
+          <span style={{ fontSize: '13px', color: '#374151' }}>{zone}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 export default function YearlyDistributionChart({ data }) {
   const chartData = useMemo(() => {
     if (!data || data.length === 0) return [];
@@ -60,14 +85,7 @@ export default function YearlyDistributionChart({ data }) {
     );
   }
 
-  // 正确的顺序：极度低估 → 低估 → 合理 → 高估 → 极度低估（注意最后一个是极度低估）
   const zones = ['极度低估', '低估', '合理', '高估', '极度高估'];
-
-  // 自定义图例，确保顺序正确
-  const legendPayload = zones.map(zone => ({
-    value: zone,
-    color: ZONE_COLORS[zone],
-  }));
 
   return (
     <div style={{ width: '100%', height: 500 }}>
@@ -89,11 +107,6 @@ export default function YearlyDistributionChart({ data }) {
             label={{ value: '占比 (%)', angle: -90, position: 'insideLeft', style: { textAnchor: 'middle', fontSize: 12 } }}
           />
           <Tooltip content={<CustomTooltip />} />
-          <Legend
-            wrapperStyle={{ paddingTop: '10px' }}
-            formatter={(value) => <span style={{ color: '#374151', fontSize: '12px' }}>{value}</span>}
-            payload={legendPayload}
-          />
           {zones.map(zone => (
             <Bar
               key={zone}
@@ -101,10 +114,12 @@ export default function YearlyDistributionChart({ data }) {
               stackId="a"
               fill={ZONE_COLORS[zone]}
               name={zone}
+              legendType="plainline"
             />
           ))}
         </BarChart>
       </ResponsiveContainer>
+      <CustomLegend />
     </div>
   );
 }
