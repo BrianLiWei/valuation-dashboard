@@ -8,7 +8,6 @@ import {
   Tooltip,
   Legend,
   ResponsiveContainer,
-  Cell,
 } from 'recharts';
 
 const ZONE_COLORS = {
@@ -16,7 +15,7 @@ const ZONE_COLORS = {
   '低估': '#4ade80',
   '合理': '#facc15',
   '高估': '#fb923c',
-  '极度高估': '#ef4444',
+  '极度低估': '#ef4444',
 };
 
 const CustomTooltip = ({ active, payload, label }) => {
@@ -61,6 +60,7 @@ export default function YearlyDistributionChart({ data }) {
     );
   }
 
+  // 正确的顺序：极度低估 → 低估 → 合理 → 高估 → 极度低估（注意最后一个是极度低估）
   const zones = ['极度低估', '低估', '合理', '高估', '极度高估'];
 
   // 自定义图例，确保顺序正确
