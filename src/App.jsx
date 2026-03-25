@@ -3,7 +3,9 @@ import ValuationChart from './components/ValuationChart';
 import MetricsChart from './components/MetricsChart';
 import ValuationLegend from './components/ValuationLegend';
 import { getValuationLevel, processLixingerData, getIndexPEPercentile } from './utils/valuation';
+import { calculateYearlyDistribution } from './utils/yearlyDistribution';
 import SingleIndexChart from './components/SingleIndexChart';
+import YearlyDistributionChart from './components/YearlyDistributionChart';
 import './App.css';
 
 function App() {
@@ -86,6 +88,11 @@ function App() {
   const latestLevel = getValuationLevel(latestData?.compositeScore || 50);
   const defenseLevel = getValuationLevel(latestData?.defenseScore || 50);
   const offenseLevel = getValuationLevel(latestData?.offenseScore || 50);
+
+  // 年度估值分布数据
+  const yearlyDistributionData = useMemo(() => {
+    return calculateYearlyDistribution(processedData);
+  }, [processedData]);
 
   // 数据加载中或加载失败
   if (dataLoading) {
@@ -251,6 +258,15 @@ function App() {
           lineName="PE分位（5年）"
           lineColor="#374151"
         />
+      </section>
+
+      {/* 年度估值分布图 */}
+      <section className="chart-section">
+        <h2>年度估值分布（100%堆叠柱状图）</h2>
+        <p className="chart-description">
+          每年中证全指估值处于各区间的交易日占比
+        </p>
+        <YearlyDistributionChart data={yearlyDistributionData} />
       </section>
 
       {/* 数据说明 */}
