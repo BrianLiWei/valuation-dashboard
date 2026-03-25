@@ -63,6 +63,12 @@ export default function YearlyDistributionChart({ data }) {
 
   const zones = ['极度低估', '低估', '合理', '高估', '极度高估'];
 
+  // 自定义图例，确保顺序正确
+  const legendPayload = zones.map(zone => ({
+    value: zone,
+    color: ZONE_COLORS[zone],
+  }));
+
   return (
     <div style={{ width: '100%', height: 500 }}>
       <ResponsiveContainer>
@@ -86,6 +92,7 @@ export default function YearlyDistributionChart({ data }) {
           <Legend
             wrapperStyle={{ paddingTop: '10px' }}
             formatter={(value) => <span style={{ color: '#374151', fontSize: '12px' }}>{value}</span>}
+            payload={legendPayload}
           />
           {zones.map(zone => (
             <Bar
