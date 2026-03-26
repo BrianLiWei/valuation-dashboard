@@ -9,7 +9,7 @@ export function calculateYearlyDistribution(data) {
 
   for (const item of data) {
     const year = item.date.substring(0, 4);
-    if (year < '2015' || year > '2025') continue;
+    if (year < '2015' || year > '2026') continue;
 
     const level = getValuationLevel(item.compositeScore);
 

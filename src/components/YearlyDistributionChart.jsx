@@ -74,7 +74,7 @@ const renderLegend = () => {
 export default function YearlyDistributionChart({ data }) {
   const chartData = useMemo(() => {
     if (!data || data.length === 0) return [];
-    return data.filter(d => d.year >= '2015' && d.year <= '2025');
+    return data.filter(d => d.year >= '2015' && d.year <= '2026');
   }, [data]);
 
   if (chartData.length === 0) {
