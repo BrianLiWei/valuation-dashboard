@@ -12,7 +12,11 @@ export function calculateYearlyDistribution(data) {
     if (year < '2015' || year > '2025') continue;
 
     const level = getValuationLevel(item.compositeScore);
-    const zone = level.label; // '极度低估', '低估', '合理', '高估', '极度低估'
+
+    // 跳过数据不足的记录
+    if (level.label === '数据不足') continue;
+
+    const zone = level.label; // '极度低估', '低估', '合理', '高估', '极度高估'
 
     if (!yearlyData[year]) {
       yearlyData[year] = {
