@@ -146,7 +146,7 @@ def save_data(data):
     """保存数据到JSON文件"""
     with open(JSON_FILE, 'w', encoding='utf-8') as f:
         json.dump(data, f, indent=2, ensure_ascii=False)
-    print(f"数据已保存到 {JSON_FILE}")
+    print(f"文件路径: {JSON_FILE}")
 
 def fetch_and_update_data():
     """获取并更新所有指数数据"""
@@ -163,6 +163,8 @@ def fetch_and_update_data():
     print(f"现有数据: {list(existing_data.keys())}")
 
     all_data = {}
+    has_new_data = False
+
     for code in INDEX_CODES:
         print(f"获取 {code} 数据...")
         data = get_index_data(code, start_date, end_date)
@@ -179,20 +181,47 @@ def fetch_and_update_data():
             # 排序回去（从新到旧）
             data.sort(key=lambda x: x.get("date", ""), reverse=True)
 
+            # 对比新旧数据的最后日期
+            existing_items = existing_data.get(code, {}).get("data", [])
+            existing_dates = [d.get("date") for d in existing_items if d.get("date")]
+            existing_dates.sort(reverse=True)
+            old_latest = existing_dates[0] if existing_dates else None
+
+            new_dates = [d.get("date") for d in data if d.get("date")]
+            new_dates.sort(reverse=True)
+            new_latest = new_dates[0] if new_dates else None
+
+            if old_latest and new_latest:
+                if new_latest > old_latest:
+                    print(f"  ✅ 新增数据，最新日期: {new_latest}（原: {old_latest}）")
+                    has_new_data = True
+                else:
+                    print(f"  ⏳ 数据无变化，最后日期: {old_latest}")
+            elif new_latest:
+                print(f"  ✅ 新数据，最早日期: {new_dates[-1]}，最新: {new_latest}")
+                has_new_data = True
+
             all_data[code] = {
                 "name": name,
                 "data": data
             }
-            print(f"  获取到 {len(data)} 条数据")
+            print(f"  共 {len(data)} 条数据")
         else:
-            print(f"  无数据")
+            print(f"  ⚠️ 无数据（保留现有数据）")
+            if code in existing_data:
+                all_data[code] = existing_data[code]
 
     if not all_data:
         print("未获取到任何数据")
         return False
 
-    save_data(all_data)
-    print("数据更新完成!")
+    print("-" * 50)
+    if has_new_data:
+        print("📈 有新增数据，更新文件...")
+        save_data(all_data)
+        print("✅ 数据更新完成！")
+    else:
+        print("⏳ 数据无变化，跳过保存。")
     return True
 
 if __name__ == "__main__":

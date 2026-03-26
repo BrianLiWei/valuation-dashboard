@@ -9,14 +9,7 @@ import {
   Legend,
   ResponsiveContainer,
 } from 'recharts';
-
-const ZONE_COLORS = {
-  '极度低估': '#16a34a',
-  '低估': '#4ade80',
-  '合理': '#facc15',
-  '高估': '#fb923c',
-  '极度高估': '#ef4444',
-};
+import { ZONE_COLORS_CN as ZONE_COLORS } from '../utils/valuation';
 
 const CustomTooltip = ({ active, payload, label }) => {
   if (active && payload && payload.length) {

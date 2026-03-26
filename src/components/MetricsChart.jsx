@@ -12,14 +12,7 @@ import {
   ReferenceArea,
   Brush,
 } from 'recharts';
-
-const ZONE_COLORS = {
-  EXTREME_UNDERVALUED: '#16a34a',
-  UNDERVALUED: '#4ade80',
-  FAIR: '#fde047',
-  OVERVALUED: '#f97316',
-  EXTREME_OVERVALUED: '#ef4444',
-};
+import { ZONE_COLORS } from '../utils/valuation';
 
 const CustomTooltip = ({ active, payload, label }) => {
   if (active && payload && payload.length) {

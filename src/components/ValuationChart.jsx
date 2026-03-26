@@ -13,17 +13,9 @@ import {
   Brush,
   Bar,
 } from 'recharts';
-import { getValuationLevel } from '../utils/valuation';
+import { getValuationLevel, ZONE_COLORS } from '../utils/valuation';
 
 // 估值区间颜色
-const ZONE_COLORS = {
-  EXTREME_UNDERVALUED: '#16a34a',
-  UNDERVALUED: '#4ade80',
-  FAIR: '#fde047',
-  OVERVALUED: '#f97316',
-  EXTREME_OVERVALUED: '#ef4444',
-};
-
 const CustomTooltip = ({ active, payload, label }) => {
   if (active && payload && payload.length) {
     const data = payload[0]?.payload;

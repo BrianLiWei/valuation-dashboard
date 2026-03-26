@@ -18,24 +18,6 @@ export function getValuationLevel(score) {
   return VALUATION_LEVELS.EXTREME_UNDERVALUED;
 }
 
-// 指数信息
-export const INDEX_INFO = {
-  "000985": { name: "中证全指", description: "全部A股" },
-  "000852": { name: "中证1000", description: "小盘股" },
-  "000922": { name: "中证红利", description: "中证红利" },
-  "399006": { name: "创业板指", description: "创业板" },
-  "000905": { name: "中证500", description: "中证500（备选）" },
-};
-
-// 计算百分位数
-function calculatePercentile(value, sortedHistory) {
-  if (!sortedHistory || sortedHistory.length < 250) return null;
-  const validHistory = sortedHistory.filter(v => v !== null && v !== undefined && !isNaN(v) && v > 0);
-  if (validHistory.length < 250) return null;
-  const countBelow = validHistory.filter(v => v <= value).length;
-  return (countBelow / validHistory.length) * 100;
-}
-
 // 处理原始数据，使用预计算的百分位
 export function processLixingerData(rawData) {
   console.time('processLixingerData');
@@ -135,32 +117,6 @@ export function processLixingerData(rawData) {
   return result;
 }
 
-// 获取所有指数数据
-export function getAllIndexData(rawData) {
-  const result = {};
-
-  for (const [code, info] of Object.entries(rawData)) {
-    const dataList = [];
-
-    for (const item of info.data || []) {
-      dataList.push({
-        date: item.date,
-        pe_ttm: item['pe_ttm.mcw'],
-        pb: item['pb.mcw'],
-      });
-    }
-
-    dataList.sort((a, b) => new Date(a.date) - new Date(b.date));
-
-    result[code] = {
-      name: info.name,
-      data: dataList,
-    };
-  }
-
-  return result;
-}
-
 // 获取单个指数的PE分位历史（使用Python预计算值）
 export function getIndexPEPercentile(rawData, indexCode) {
   const indexData = rawData[indexCode];
@@ -184,3 +140,21 @@ export function getIndexPEPercentile(rawData, indexCode) {
 
   return result;
 }
+
+// 图表用估值区间颜色（英文key，供Recharts组件使用）
+export const ZONE_COLORS = {
+  EXTREME_UNDERVALUED: '#16a34a',
+  UNDERVALUED: '#4ade80',
+  FAIR: '#fde047',
+  OVERVALUED: '#f97316',
+  EXTREME_OVERVALUED: '#ef4444',
+};
+
+// 图表用估值区间颜色（中文key，供堆叠柱状图使用）
+export const ZONE_COLORS_CN = {
+  '极度低估': '#16a34a',
+  '低估': '#4ade80',
+  '合理': '#facc15',
+  '高估': '#fb923c',
+  '极度高估': '#ef4444',
+};

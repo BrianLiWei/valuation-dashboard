@@ -32,75 +32,6 @@
   margin: 4px 0 0;
 }
 
-/* 数据来源信息 */
-.data-source-section {
-  margin-bottom: 20px;
-  padding: 12px 16px;
-  background: #f0f9ff;
-  border-radius: 8px;
-  border: 1px solid #bae6fd;
-}
-
-.data-source-section h4 {
-  font-size: 13px;
-  font-weight: 600;
-  color: #0369a1;
-  margin: 0 0 8px;
-}
-
-.index-tags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-.index-tag {
-  font-size: 12px;
-  padding: 4px 10px;
-  background: white;
-  border: 1px solid #7dd3fc;
-  border-radius: 16px;
-  color: #0284c7;
-}
-
-/* 多指数图表 */
-.multi-index-chart {
-  padding: 16px;
-}
-
-.index-list {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  gap: 12px;
-}
-
-.index-item {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 12px;
-  background: #f9fafb;
-  border-radius: 8px;
-  border: 1px solid #e5e7eb;
-}
-
-.index-name {
-  font-weight: 600;
-  color: #111827;
-  flex: 1;
-}
-
-.index-code {
-  font-size: 12px;
-  color: #6b7280;
-  font-family: monospace;
-}
-
-.index-count {
-  font-size: 11px;
-  color: #9ca3af;
-}
-
 /* 最新估值卡片 */
 .latest-valuation {
   display: grid;
@@ -169,11 +100,6 @@
 .card-date {
   font-size: 12px;
   color: #9ca3af;
-}
-
-.card-sublabel {
-  font-size: 13px;
-  color: #6b7280;
 }
 
 /* 卡片分项详情 */
