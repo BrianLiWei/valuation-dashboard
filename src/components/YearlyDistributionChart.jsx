@@ -88,11 +88,11 @@ export default function YearlyDistributionChart({ data }) {
   const zones = ['极度低估', '低估', '合理', '高估', '极度高估'];
 
   return (
-    <div style={{ width: '100%', height: 520 }}>
+    <div style={{ width: '100%', height: 540 }}>
       <ResponsiveContainer>
         <BarChart
           data={chartData}
-          margin={{ top: 20, right: 30, left: 20, bottom: 50 }}
+          margin={{ top: 20, right: 30, left: 20, bottom: 70 }}
         >
           <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
           <XAxis
