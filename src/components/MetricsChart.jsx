@@ -68,7 +68,7 @@ export default function MetricsChart({ data }) {
   return (
     <div style={{ width: '100%', height: 500 }}>
       <ResponsiveContainer>
-        <ComposedChart data={validData} margin={{ top: 10, right: 10, left: 0, bottom: 5 }}>
+        <ComposedChart data={validData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
 
           <XAxis
