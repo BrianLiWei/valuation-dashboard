@@ -90,10 +90,9 @@ export default function MetricsChart({ data }) {
           <YAxis
             yAxisId="right"
             orientation="right"
-            mirror={true}
             domain={[-3, 5]}
             tick={{ fontSize: 11 }}
-            label={{ value: 'ERP (%)', angle: 90, position: 'insideRight', style: { textAnchor: 'middle', fontSize: 12 } }}
+            label={{ value: 'ERP (%)', angle: 90, position: 'outside', style: { textAnchor: 'middle', fontSize: 12 } }}
           />
 
           <Tooltip content={<CustomTooltip />} />
