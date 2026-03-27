@@ -97,7 +97,7 @@ export default function YearlyDistributionChart({ data }) {
             domain={[0, 100]}
             tick={{ fontSize: 11 }}
             ticks={[0, 25, 50, 75, 100]}
-            label={{ value: '占比 (%)', angle: -90, position: 'insideLeft', style: { textAnchor: 'middle', fontSize: 12 } }}
+            label={{ value: '占比 (%)', angle: 0, position: 'insideTop', style: { textAnchor: 'middle', fontSize: 12 } }}
           />
           <Tooltip content={<CustomTooltip />} />
           <Legend
