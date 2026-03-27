@@ -67,7 +67,7 @@ export default function ValuationChart({ data }) {
   return (
     <div style={{ width: '100%', height: 500 }}>
       <ResponsiveContainer>
-        <ComposedChart data={validData} margin={{ top: 50, right: 30, left: 20, bottom: 5 }}>
+        <ComposedChart data={validData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
 
           <XAxis
@@ -81,9 +81,8 @@ export default function ValuationChart({ data }) {
           <YAxis
             domain={[0, 100]}
             tick={{ fontSize: 11 }}
-            tickMargin={20}
             ticks={[0, 10, 30, 70, 90, 100]}
-            label={{ value: '估值分数', angle: 0, position: 'insideTop', style: { textAnchor: 'middle', fontSize: 12 } }}
+            label={{ value: '估值分数', angle: -90, position: 'insideLeft', style: { textAnchor: 'middle', fontSize: 12 } }}
           />
 
           <Tooltip content={<CustomTooltip />} />

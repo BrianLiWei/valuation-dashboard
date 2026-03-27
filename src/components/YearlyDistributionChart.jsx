@@ -85,7 +85,7 @@ export default function YearlyDistributionChart({ data }) {
       <ResponsiveContainer>
         <BarChart
           data={chartData}
-          margin={{ top: 50, right: 30, left: 20, bottom: 5 }}
+          margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
         >
           <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
           <XAxis
@@ -96,9 +96,9 @@ export default function YearlyDistributionChart({ data }) {
           <YAxis
             domain={[0, 100]}
             tick={{ fontSize: 11 }}
-            tickMargin={8}
+            tickMargin={5}
             ticks={[0, 25, 50, 75, 100]}
-            label={{ value: '占比 (%)', angle: 0, position: 'insideTop', style: { textAnchor: 'middle', fontSize: 12 } }}
+            label={{ value: '占比 (%)', angle: -90, position: 'insideLeft', style: { textAnchor: 'middle', fontSize: 12 } }}
           />
           <Tooltip content={<CustomTooltip />} />
           <Legend
