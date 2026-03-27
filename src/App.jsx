@@ -6,6 +6,8 @@ import { getValuationLevel, processLixingerData, getIndexPEPercentile } from './
 import { calculateYearlyDistribution } from './utils/yearlyDistribution';
 import SingleIndexChart from './components/SingleIndexChart';
 import YearlyDistributionChart from './components/YearlyDistributionChart';
+import DualEndsModule from './components/DualEndsModule';
+import TrendSignalModule from './components/TrendSignalModule';
 import './App.css';
 
 function App() {
@@ -73,6 +75,34 @@ function App() {
     merged.sort((a, b) => a.date.localeCompare(b.date));
     return merged.filter(d => d.date >= '2015-01-01');
   }, [rawData]);
+
+  // 进攻端分位历史（用于TrendSignalModule均线计算）
+  const offenseScoreHistory = useMemo(() => {
+    if (!processedData || processedData.length === 0) return [];
+    return processedData
+      .filter(d => d.offenseScore !== null && d.offenseScore !== undefined)
+      .slice(-30) // 取最近30个交易日，保证有足够数据计算SMA
+      .map(d => ({
+        date: d.date,
+        offenseScore: d.offenseScore,
+      }));
+  }, [processedData]);
+
+  // 进攻端5日均线和20日均线
+  const offenseMA = useMemo(() => {
+    if (offenseScoreHistory.length < 5) return { ma5: null, ma20: null, direction: 'neutral' };
+    const scores5 = offenseScoreHistory.slice(-5).map(d => d.offenseScore);
+    const scores20 = offenseScoreHistory.slice(-20).map(d => d.offenseScore);
+    const ma5 = scores5.reduce((a, b) => a + b, 0) / scores5.length;
+    const ma20 = scores20.length >= 20
+      ? scores20.reduce((a, b) => a + b, 0) / scores20.length
+      : ma5;
+    const diff = ma5 - ma20;
+    let direction = 'neutral';
+    if (diff > 2) direction = 'up';
+    else if (diff < -2) direction = 'down';
+    return { ma5, ma20, direction };
+  }, [offenseScoreHistory]);
 
   // 过滤2015年及之后的数据
   const filteredData = useMemo(() => {
@@ -193,6 +223,20 @@ function App() {
           <div className="detail-source">*基于创业板指和中证1000计算</div>
         </div>
       </section>
+
+      <TrendSignalModule
+        zone={latestLevel.label}
+        maDirection={offenseMA.direction}
+        offense={latestData?.offenseScore}
+        defense={latestData?.defenseScore}
+        offenseMA5={offenseMA.ma5}
+        offenseMA20={offenseMA.ma20}
+      />
+
+      <DualEndsModule
+        offenseScore={latestData?.offenseScore}
+        defenseScore={latestData?.defenseScore}
+      />
 
       {/* 估值区间图例 */}
       <ValuationLegend />
