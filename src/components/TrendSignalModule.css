@@ -1,0 +1,41 @@
+.trend-signal-module {
+  border-radius: 10px;
+  padding: 20px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e5e7eb;
+  transition: background-color 0.3s ease;
+}
+
+.trend-signal-main {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.trend-signal-icon {
+  font-size: 20px;
+  font-weight: bold;
+  line-height: 1;
+}
+
+.trend-signal-label {
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.trend-signal-zone {
+  font-size: 14px;
+  color: #6b7280;
+  margin-left: 4px;
+}
+
+.trend-signal-footer {
+  padding-top: 12px;
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.trend-signal-detail {
+  font-size: 13px;
+  color: #6b7280;
+}
