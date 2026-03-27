@@ -91,7 +91,7 @@ export default function YearlyDistributionChart({ data }) {
           <XAxis
             dataKey="year"
             tick={{ fontSize: 11 }}
-            tickMargin={5}
+            tickMargin={20}
           />
           <YAxis
             domain={[0, 100]}

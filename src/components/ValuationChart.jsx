@@ -81,7 +81,7 @@ export default function ValuationChart({ data }) {
           <YAxis
             domain={[0, 100]}
             tick={{ fontSize: 11 }}
-            tickMargin={8}
+            tickMargin={20}
             ticks={[0, 10, 30, 70, 90, 100]}
             label={{ value: '估值分数', angle: 0, position: 'insideTop', style: { textAnchor: 'middle', fontSize: 12 } }}
           />
