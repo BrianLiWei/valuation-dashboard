@@ -109,7 +109,7 @@ export default function ValuationChart({ data }) {
           <Brush
             dataKey="date"
             height={30}
-            stroke="#2563eb"
+            stroke="#475569"
             tickFormatter={(value) => value?.slice(0, 10)}
             travellerWidth={10}
             gap={1}

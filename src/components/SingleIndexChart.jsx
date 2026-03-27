@@ -94,7 +94,7 @@ export default function SingleIndexChart({ data, title, dataKey = 'pe_percentile
           <Brush
             dataKey="date"
             height={30}
-            stroke={lineColor}
+            stroke="#475569"
             tickFormatter={(value) => value?.slice(0, 10)}
             travellerWidth={10}
             gap={1}
