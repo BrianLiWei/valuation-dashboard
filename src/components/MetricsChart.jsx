@@ -109,7 +109,7 @@ export default function MetricsChart({ data }) {
             type="monotone"
             dataKey="pe_percentile"
             name="PE_TTM 5年分位"
-            stroke="#374151"
+            stroke="#1e40af"
             strokeWidth={1.5}
             dot={false}
             connectNulls
@@ -121,7 +121,7 @@ export default function MetricsChart({ data }) {
             type="monotone"
             dataKey="pb_percentile"
             name="PB 5年分位"
-            stroke="#d1d5db"
+            stroke="#60a5fa"
             strokeWidth={1.5}
             dot={false}
             connectNulls
@@ -133,7 +133,7 @@ export default function MetricsChart({ data }) {
             type="monotone"
             dataKey="erp"
             name="ERP"
-            stroke="#a78bfa"
+            stroke="#7c3aed"
             strokeWidth={1.5}
             dot={false}
             strokeDasharray="5 5"

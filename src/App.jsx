@@ -270,7 +270,7 @@ function App() {
           title="中证红利PE分位"
           dataKey="pe_percentile"
           lineName="PE分位（5年）"
-          lineColor="#374151"
+          lineColor="#0891b2"
         />
       </section>
 
@@ -285,7 +285,7 @@ function App() {
           title="创业板指PE分位"
           dataKey="pe_percentile"
           lineName="PE分位（5年）"
-          lineColor="#374151"
+          lineColor="#2563eb"
         />
       </section>
 
@@ -300,7 +300,7 @@ function App() {
           title="中证1000 PE分位"
           dataKey="pe_percentile"
           lineName="PE分位（5年）"
-          lineColor="#374151"
+          lineColor="#059669"
         />
       </section>
 
