@@ -96,6 +96,7 @@ export default function YearlyDistributionChart({ data }) {
           <YAxis
             domain={[0, 100]}
             tick={{ fontSize: 11 }}
+            tickMargin={8}
             ticks={[0, 25, 50, 75, 100]}
             label={{ value: '占比 (%)', angle: 0, position: 'insideTop', style: { textAnchor: 'middle', fontSize: 12 } }}
           />
