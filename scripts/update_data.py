@@ -21,7 +21,7 @@ from datetime import datetime, timedelta
 # 配置
 LIXINGER_TOKEN = "87ed8c88-cda6-4000-939c-ac87d6da83b7"
 INDEX_CODES = ["000985", "000922", "399006", "000852", "000905"]
-API_URL = "https://open.lixinger.com/api/a/index/fundamental"
+API_URL = "https://open.lixinger.com/api/cn/index/fundamental"
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 PROJECT_DIR = os.path.dirname(SCRIPT_DIR)
 JSON_FILE = os.path.join(PROJECT_DIR, "src/data/lixinger_indices.json")

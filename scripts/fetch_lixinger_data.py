@@ -18,7 +18,7 @@ import time
 from datetime import datetime, timedelta
 
 TOKEN = "87ed8c88-cda6-4000-939c-ac87d6da83b7"
-INDEX_API_URL = "https://open.lixinger.com/api/a/index/fundamental"
+INDEX_API_URL = "https://open.lixinger.com/api/cn/index/fundamental"
 
 # 请求头（理杏仁API要求）
 HEADERS = {

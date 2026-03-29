@@ -24,7 +24,7 @@ import base64
 
 # ============== 配置 ==============
 LIXINGER_TOKEN = "87ed8c88-cda6-4000-939c-ac87d6da83b7"
-API_URL = "https://open.lixinger.com/api/a/index/fundamental"  # 统一使用 /api/a/ 端点
+API_URL = "https://open.lixinger.com/api/cn/index/fundamental"  # 统一使用 /api/a/ 端点
 
 # 请求头（理杏仁API要求）
 HEADERS = {
