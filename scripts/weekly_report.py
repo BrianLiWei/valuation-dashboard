@@ -2,11 +2,19 @@
 """
 A股估值周报生成脚本
 包含完整的网页端内容：三个指标卡片 + 所有历史走势图
+
+API合规要求：
+- headers: Content-Type: application/json
+- headers: accept-encoding 必须包含 gzip
+- 每分钟最大请求次数: 1000次，每秒: 36次
+- 需要重试机制应对网络问题
+- 遇到429限流时需等待后重试
 """
 
 import requests
 import json
 import smtplib
+import time
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from email.mime.image import MIMEImage
@@ -16,6 +24,17 @@ import base64
 
 # ============== 配置 ==============
 LIXINGER_TOKEN = "87ed8c88-cda6-4000-939c-ac87d6da83b7"
+API_URL = "https://open.lixinger.com/api/a/index/fundamental"  # 统一使用 /api/a/ 端点
+
+# 请求头（理杏仁API要求）
+HEADERS = {
+    "Content-Type": "application/json",
+    "Accept-Encoding": "gzip, deflate, br, *",
+}
+
+# 重试配置
+MAX_RETRIES = 5
+RETRY_BASE_DELAY = 2  # 基础重试延迟（秒）
 
 # 邮件配置
 SMTP_SERVER = "smtp.gmail.com"
@@ -26,10 +45,59 @@ RECIPIENT_EMAIL = "brian.w.li@hotmail.com"
 
 # ============== 函数 ==============
 
+def fetch_with_retry(url, payload, timeout=60):
+    """
+    带重试机制的API请求
+
+    合规要求：
+    - 理杏仁API要求 headers 包含 Content-Type 和 accept-encoding(含gzip)
+    - 遇到429限流时，等待后自动重试
+    - 遇到网络错误时，使用指数退避重试
+    """
+    for attempt in range(MAX_RETRIES):
+        try:
+            response = requests.post(
+                url,
+                json=payload,
+                headers=HEADERS,
+                timeout=timeout
+            )
+
+            # 429 Too Many Requests - 限流，等待后重试
+            if response.status_code == 429:
+                wait_time = RETRY_BASE_DELAY * (2 ** attempt)
+                print(f"  ⚠️ 触发限流 (429)，等待 {wait_time}s 后重试 (第{attempt+1}/{MAX_RETRIES}次)")
+                time.sleep(wait_time)
+                continue
+
+            # 其他HTTP错误
+            if response.status_code != 200:
+                wait_time = RETRY_BASE_DELAY * (2 ** attempt)
+                print(f"  ⚠️ API返回错误 {response.status_code}，等待 {wait_time}s 后重试 (第{attempt+1}/{MAX_RETRIES}次)")
+                time.sleep(wait_time)
+                continue
+
+            return response.json()
+
+        except requests.exceptions.Timeout:
+            wait_time = RETRY_BASE_DELAY * (2 ** attempt)
+            print(f"  ⚠️ 请求超时，等待 {wait_time}s 后重试 (第{attempt+1}/{MAX_RETRIES}次)")
+            time.sleep(wait_time)
+            continue
+
+        except requests.exceptions.RequestException as e:
+            wait_time = RETRY_BASE_DELAY * (2 ** attempt)
+            print(f"  ⚠️ 网络错误: {e}，等待 {wait_time}s 后重试 (第{attempt+1}/{MAX_RETRIES}次)")
+            time.sleep(wait_time)
+            continue
+
+    print(f"  ❌ 达到最大重试次数 ({MAX_RETRIES})，请求失败")
+    return None
+
+
 def get_index_data(stock_code, start_date, end_date):
     """获取指数数据"""
-    url = "https://open.lixinger.com/api/cn/index/fundamental"
-    params = {
+    payload = {
         "stockCodes": [stock_code],
         "metricsList": ["pe_ttm.mcw", "pb.mcw"],
         "startDate": start_date,
@@ -37,20 +105,16 @@ def get_index_data(stock_code, start_date, end_date):
         "token": LIXINGER_TOKEN
     }
 
-    try:
-        resp = requests.post(url, json=params, timeout=30)
-        if resp.status_code == 200:
-            data = resp.json()
-            raw_data = data.get("data", [])
-            # 规范化日期格式：去掉时间部分
-            for item in raw_data:
-                if item.get("date") and "T" in item["date"]:
-                    item["date"] = item["date"].split("T")[0]
-            return raw_data
-        return []
-    except Exception as e:
-        print(f"获取数据失败: {e}")
-        return []
+    result = fetch_with_retry(API_URL, payload, timeout=60)
+
+    if result is not None:
+        raw_data = result.get("data", [])
+        # 规范化日期格式：去掉时间部分
+        for item in raw_data:
+            if item.get("date") and "T" in item["date"]:
+                item["date"] = item["date"].split("T")[0]
+        return raw_data
+    return []
 
 def calculate_percentile(value, sorted_history):
     """计算分位点"""
@@ -211,6 +275,9 @@ def generate_full_report():
             "level": level
         }
 
+    # 请求间隔：满足每秒≤36次的要求
+    time.sleep(0.5)
+
     print("获取中证红利数据...")
     hl_data = get_index_data("000922", "2020-01-01", end_date)
     hl_pe = compute_single_index_pe_percentile(hl_data)
@@ -224,9 +291,15 @@ def generate_full_report():
             "level": level
         }
 
+    # 请求间隔：满足每秒≤36次的要求
+    time.sleep(0.5)
+
     print("获取创业板指数据...")
     cyb_data = get_index_data("399006", "2020-01-01", end_date)
     cyb_pe = compute_single_index_pe_percentile(cyb_data)
+
+    # 请求间隔：满足每秒≤36次的要求
+    time.sleep(0.5)
 
     print("获取中证1000数据...")
     zg1000_data = get_index_data("000852", "2020-01-01", end_date)

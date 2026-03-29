@@ -3,25 +3,94 @@
 自动更新数据脚本
 每天运行，从理杏仁API获取最新数据，更新本地JSON文件
 并在Python中预计算5年滚动百分位（与JavaScript原始方法完全一致）
+
+API合规要求：
+- headers: Content-Type: application/json
+- headers: accept-encoding 必须包含 gzip
+- 每分钟最大请求次数: 1000次，每秒: 36次
+- 需要重试机制应对网络问题
+- 遇到429限流时需等待后重试
 """
 
 import os
 import json
+import time
 import requests
 from datetime import datetime, timedelta
 
 # 配置
 LIXINGER_TOKEN = "87ed8c88-cda6-4000-939c-ac87d6da83b7"
 INDEX_CODES = ["000985", "000922", "399006", "000852", "000905"]
+API_URL = "https://open.lixinger.com/api/a/index/fundamental"
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 PROJECT_DIR = os.path.dirname(SCRIPT_DIR)
 JSON_FILE = os.path.join(PROJECT_DIR, "src/data/lixinger_indices.json")
+
+# 请求头（理杏仁API要求）
+HEADERS = {
+    "Content-Type": "application/json",
+    "Accept-Encoding": "gzip, deflate, br, *",
+}
+
+# 重试配置
+MAX_RETRIES = 5
+RETRY_BASE_DELAY = 2  # 基础重试延迟（秒）
 
 def normalize_date(date_str):
     """标准化日期格式"""
     if "T" in date_str:
         return date_str.split("T")[0]
     return date_str
+
+
+def fetch_with_retry(url, payload, timeout=60):
+    """
+    带重试机制的API请求
+
+    合规要求：
+    - 理杏仁API要求 headers 包含 Content-Type 和 accept-encoding(含gzip)
+    - 遇到429限流时，等待后自动重试
+    - 遇到网络错误时，使用指数退避重试
+    """
+    for attempt in range(MAX_RETRIES):
+        try:
+            response = requests.post(
+                url,
+                json=payload,
+                headers=HEADERS,
+                timeout=timeout
+            )
+
+            # 429 Too Many Requests - 限流，等待后重试
+            if response.status_code == 429:
+                wait_time = RETRY_BASE_DELAY * (2 ** attempt)
+                print(f"  ⚠️ 触发限流 (429)，等待 {wait_time}s 后重试 (第{attempt+1}/{MAX_RETRIES}次)")
+                time.sleep(wait_time)
+                continue
+
+            # 其他HTTP错误
+            if response.status_code != 200:
+                wait_time = RETRY_BASE_DELAY * (2 ** attempt)
+                print(f"  ⚠️ API返回错误 {response.status_code}，等待 {wait_time}s 后重试 (第{attempt+1}/{MAX_RETRIES}次)")
+                time.sleep(wait_time)
+                continue
+
+            return response.json()
+
+        except requests.exceptions.Timeout:
+            wait_time = RETRY_BASE_DELAY * (2 ** attempt)
+            print(f"  ⚠️ 请求超时，等待 {wait_time}s 后重试 (第{attempt+1}/{MAX_RETRIES}次)")
+            time.sleep(wait_time)
+            continue
+
+        except requests.exceptions.RequestException as e:
+            wait_time = RETRY_BASE_DELAY * (2 ** attempt)
+            print(f"  ⚠️ 网络错误: {e}，等待 {wait_time}s 后重试 (第{attempt+1}/{MAX_RETRIES}次)")
+            time.sleep(wait_time)
+            continue
+
+    print(f"  ❌ 达到最大重试次数 ({MAX_RETRIES})，请求失败")
+    return None
 
 def calculate_percentile(value, sorted_history):
     """计算百分位数 - 与JavaScript原始方法一致"""
@@ -97,7 +166,6 @@ def add_percentile_to_data(data_list):
 # 获取指数数据（处理API的10年限制）
 def get_index_data(stock_code, start_date, end_date):
     """获取指数数据，自动处理10年限制"""
-    url = "https://open.lixinger.com/api/a/index/fundamental"
     all_data = []
 
     current_start = datetime.strptime(start_date, "%Y-%m-%d")
@@ -111,7 +179,7 @@ def get_index_data(stock_code, start_date, end_date):
         segment_start_str = current_start.strftime("%Y-%m-%d")
         segment_end_str = segment_end.strftime("%Y-%m-%d")
 
-        params = {
+        payload = {
             "stockCodes": [stock_code],
             "metricsList": ["pe_ttm.mcw", "pb.mcw"],
             "startDate": segment_start_str,
@@ -119,19 +187,20 @@ def get_index_data(stock_code, start_date, end_date):
             "token": LIXINGER_TOKEN
         }
 
-        try:
-            resp = requests.post(url, json=params, timeout=30)
-            if resp.status_code == 200:
-                data = resp.json()
-                raw_data = data.get("data", [])
-                for item in raw_data:
-                    if item.get("date") and "T" in item["date"]:
-                        item["date"] = normalize_date(item["date"])
-                all_data.extend(raw_data)
-        except Exception as e:
-            print(f"获取 {stock_code} 数据失败 ({segment_start_str}~{segment_end_str}): {e}")
+        result = fetch_with_retry(API_URL, payload, timeout=60)
+
+        if result is not None:
+            raw_data = result.get("data", [])
+            for item in raw_data:
+                if item.get("date") and "T" in item["date"]:
+                    item["date"] = normalize_date(item["date"])
+            all_data.extend(raw_data)
+        else:
+            print(f"获取 {stock_code} 数据失败 ({segment_start_str}~{segment_end_str})")
 
         current_start = segment_end + timedelta(days=1)
+        # 请求间隔：满足每秒≤36次的要求，这里间隔0.5s，远低于限制
+        time.sleep(0.5)
 
     return all_data
 
@@ -210,6 +279,9 @@ def fetch_and_update_data():
             print(f"  ⚠️ 无数据（保留现有数据）")
             if code in existing_data:
                 all_data[code] = existing_data[code]
+
+        # 指数之间增加请求间隔（满足每秒≤36次的要求）
+        time.sleep(1.0)
 
     if not all_data:
         print("未获取到任何数据")

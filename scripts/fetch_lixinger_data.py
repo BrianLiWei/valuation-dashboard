@@ -3,6 +3,13 @@
 """
 从理杏仁API获取A股估值数据
 时间范围: 2010-01-01 至 2026-03-21 (用于计算五年滚动分位点)
+
+API合规要求：
+- headers: Content-Type: application/json
+- headers: accept-encoding 必须包含 gzip
+- 每分钟最大请求次数: 1000次，每秒: 36次
+- 需要重试机制应对网络问题
+- 遇到429限流时需等待后重试
 """
 
 import requests
@@ -12,6 +19,16 @@ from datetime import datetime, timedelta
 
 TOKEN = "87ed8c88-cda6-4000-939c-ac87d6da83b7"
 INDEX_API_URL = "https://open.lixinger.com/api/a/index/fundamental"
+
+# 请求头（理杏仁API要求）
+HEADERS = {
+    "Content-Type": "application/json",
+    "Accept-Encoding": "gzip, deflate, br, *",
+}
+
+# 重试配置
+MAX_RETRIES = 5
+RETRY_BASE_DELAY = 2  # 基础重试延迟（秒）
 
 # 所有需要获取的指数
 INDEX_CODES = {
@@ -24,6 +41,57 @@ INDEX_CODES = {
     "399702": "红利低波",
     "399673": "创业板50",
 }
+
+
+def fetch_with_retry(url, payload, timeout=60):
+    """
+    带重试机制的API请求
+
+    合规要求：
+    - 理杏仁API要求 headers 包含 Content-Type 和 accept-encoding(含gzip)
+    - 遇到429限流时，等待后自动重试
+    - 遇到网络错误时，使用指数退避重试
+    """
+    for attempt in range(MAX_RETRIES):
+        try:
+            response = requests.post(
+                url,
+                json=payload,
+                headers=HEADERS,
+                timeout=timeout
+            )
+
+            # 429 Too Many Requests - 限流，等待后重试
+            if response.status_code == 429:
+                wait_time = RETRY_BASE_DELAY * (2 ** attempt)
+                print(f"  ⚠️ 触发限流 (429)，等待 {wait_time}s 后重试 (第{attempt+1}/{MAX_RETRIES}次)")
+                time.sleep(wait_time)
+                continue
+
+            # 其他HTTP错误
+            if response.status_code != 200:
+                wait_time = RETRY_BASE_DELAY * (2 ** attempt)
+                print(f"  ⚠️ API返回错误 {response.status_code}，等待 {wait_time}s 后重试 (第{attempt+1}/{MAX_RETRIES}次)")
+                time.sleep(wait_time)
+                continue
+
+            return response.json()
+
+        except requests.exceptions.Timeout:
+            wait_time = RETRY_BASE_DELAY * (2 ** attempt)
+            print(f"  ⚠️ 请求超时，等待 {wait_time}s 后重试 (第{attempt+1}/{MAX_RETRIES}次)")
+            time.sleep(wait_time)
+            continue
+
+        except requests.exceptions.RequestException as e:
+            wait_time = RETRY_BASE_DELAY * (2 ** attempt)
+            print(f"  ⚠️ 网络错误: {e}，等待 {wait_time}s 后重试 (第{attempt+1}/{MAX_RETRIES}次)")
+            time.sleep(wait_time)
+            continue
+
+    print(f"  ❌ 达到最大重试次数 ({MAX_RETRIES})，请求失败")
+    return None
+
 
 def fetch_index_data(stock_code, start_date, end_date, metrics):
     """获取单个指数的历史数据（支持10年以上分批获取）"""
@@ -44,29 +112,29 @@ def fetch_index_data(stock_code, start_date, end_date, metrics):
             "metricsList": metrics
         }
 
-        try:
-            resp = requests.post(INDEX_API_URL, json=payload, timeout=60)
-            data = resp.json()
+        result = fetch_with_retry(INDEX_API_URL, payload, timeout=60)
 
-            if data.get('code') == 1:
-                batch_data = data.get('data', [])
+        if result is not None:
+            if result.get('code') == 1:
+                batch_data = result.get('data', [])
                 all_data.extend(batch_data)
             else:
-                error_msg = data.get('error', {})
+                error_msg = result.get('error', {})
                 if '时间跨度不能超过10年' in str(error_msg):
                     current_end = current_start + timedelta(days=1825)
                     continue
                 print(f"Error fetching {stock_code}: {error_msg}")
                 break
-
-        except Exception as e:
-            print(f"Exception for {stock_code}: {e}")
+        else:
+            # 重试后仍失败，跳过此段
             break
 
         current_start = current_end + timedelta(days=1)
-        time.sleep(0.3)
+        # 请求间隔：满足每秒≤36次的要求，这里间隔0.5s，远低于限制
+        time.sleep(0.5)
 
     return all_data
+
 
 def get_all_data():
     """获取所有指数的数据"""
@@ -105,9 +173,11 @@ def get_all_data():
         else:
             print(f"  无法获取数据")
 
-        time.sleep(0.5)  # 避免请求过快
+        # 指数之间增加请求间隔（满足每秒≤36次的要求）
+        time.sleep(1.0)
 
     return all_data
+
 
 def main():
     print("=" * 60)
@@ -134,6 +204,7 @@ def main():
         if info['data']:
             print(f"{info['name']}({code}): {len(info['data'])} 条")
             print(f"  时间范围: {info['data'][0]['date']} 至 {info['data'][-1]['date']}")
+
 
 if __name__ == "__main__":
     main()
